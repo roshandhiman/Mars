@@ -21,8 +21,14 @@ public class Mars{
             // String answer=body.split("\"resp\":\"")[1]
             //     .split("\",\"done\"")[0];
             // System.out.println("MARS: "+answer.replace("\\n","\n"));
-            System.out.println("Status: "+resp.statusCode());
-            System.out.println("Raw Resp: "+body);
+            // System.out.println("Status: "+resp.statusCode());
+            // System.out.println("Raw Resp: "+body);
+            String key="\"resp\":\"";
+            int s=body.indexOf(key)+key.length();
+            int e=body.indexOf("\",\"done\"",s);
+            String answ=body.substring(s,e);
+            System.out.println("Mars: "+answ.replace("\\n", "\n"));
+
         }
         
 
