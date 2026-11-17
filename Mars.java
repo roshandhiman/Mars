@@ -9,7 +9,8 @@ public class Mars{
             System.out.print("You: ");
             String message=sc.nextLine();
             if(message.equalsIgnoreCase("exit")) break;
-            String json="{\"model\":\"qwen2.5:1.5b\",\"prompt\":"
+            String SysProm="Your are MARS, created by sir roshanpreet singh";
+            String json="{\"model\":\"qwen2.5:1.5b\","+"\"system\":\""+SysProm+"\","+"\"prompt\":"
             + "\"" + message.replace("\\","\\\\").replace("\"","\\\"")+"\",\"stream\":false}";
             HttpRequest request=HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:11434/api/generate"))
