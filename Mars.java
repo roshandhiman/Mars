@@ -18,9 +18,11 @@ public class Mars{
                 .build();
             HttpResponse<String> resp=client.send(request, HttpResponse.BodyHandlers.ofString());
             String body=resp.body();
-            String answer=body.split("\"resp\":\"")[1]
-                .split("\",\"done\"")[0];
-            System.out.println("MARS: "+answer.replace("\\n","\n"));
+            // String answer=body.split("\"resp\":\"")[1]
+            //     .split("\",\"done\"")[0];
+            // System.out.println("MARS: "+answer.replace("\\n","\n"));
+            System.out.println("Status: "+resp.statusCode());
+            System.out.println("Raw Resp: "+body);
         }
         
 
