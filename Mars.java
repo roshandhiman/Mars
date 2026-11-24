@@ -1,48 +1,70 @@
 import java.net.URI;
 import java.net.http.*;
 import java.util.Scanner;
-public class Mars{  
-    public static void main(String[] args) throws Exception{
-        Scanner sc=new Scanner(System.in);
+
+public class Mars {
+    public static void main(String[] args) throws Exception {
+        Scanner sc = new Scanner(System.in);
         HttpClient client = HttpClient.newHttpClient();
-        while(true) {
+        Database.init();
+        while (true) {
             System.out.print("You: ");
-            String message=sc.nextLine();
-            if(message.equalsIgnoreCase("exit")) break;
-            String SysProm="You are MARS, created by sir roshanpreet singh. "
-                + "You can use this tool: open_url | url (opens a website in the browser). "
-                + "If the user wants an action, reply with ONE line only like this: TOOL: tool_name | argument. "
-                + "If no tool is needed, just answer normally and short. "
-                + "Example: user says open youtube, you reply: TOOL: open_url | https://www.youtube.com";
-            String json="{\"model\":\"qwen2.5:1.5b\","+"\"system\":\""+SysProm+"\","+"\"prompt\":"
-            + "\"" + message.replace("\\","\\\\").replace("\"","\\\"")+"\",\"stream\":false}";
-            HttpRequest request=HttpRequest.newBuilder()
+            String msg = sc.nextLine();
+            if (msg.equalsIgnoreCase("exit") || msg.equalsIgnoreCase("bye")) break;
+            String history = Database.lastMessages(10).replace("\\", "\\\\").replace("\"", "\\\"");
+            Database.save(msg);
+            String sys = "You are Mars, a personal desktop AI assistant created by sir Roshanpreet Singh. Answer in short and simple words. "
+                + "When user wants an action, reply with ONLY ONE LINE in format: TOOL: tool_name | argument. "
+                + "Tools: "
+                + "open_app | app_name (opens Mac app) "
+                + "close_app | app_name (closes Mac app) "
+                + "open_url | url (opens website in browser) "
+                + "create_file | path or path|content (creates file) "
+                + "delete_file | path (deletes file) "
+                + "read_file | path (reads file content) "
+                + "say | text (speaks text out loud) "
+                + "cmd | command (runs shell command) "
+                + "Examples: "
+                + "User: open brave -> TOOL: open_app | Brave "
+                + "User: close brave -> TOOL: close_app | Brave "
+                + "User: say hello -> TOOL: say | hello "
+                + "User: open youtube -> TOOL: open_url | https://youtube.com "
+                + "User: open settings -> TOOL: open_app | System Settings "
+                + "User: create file test.txt -> TOOL: create_file | Desktop/test.txt "
+                + "If no tool needed, answer normally in 1-2 short sentences. "
+                + "Old chat: " + history;
+            String json = "{\"model\":\"qwen2.5:1.5b\"," + "\"system\":\"" + sys + "\"," + "\"prompt\":"
+                + "\"" + msg.replace("\\", "\\\\").replace("\"", "\\\"") + "\",\"stream\":false}";
+            HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:11434/api/generate"))
-                .header("Content-Type","application/json")
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
-            HttpResponse<String> resp=client.send(request, HttpResponse.BodyHandlers.ofString());
-            String body=resp.body();
-            // String answer=body.split("\"resp\":\"")[1]
-            //     .split("\",\"done\"")[0];
-            // System.out.println("MARS: "+answer.replace("\\n","\n"));
-            // System.out.println("Status: "+resp.statusCode());
-            // System.out.println("Raw Resp: "+body);
-            String key="\"response\":\"";
-            int s=body.indexOf(key)+key.length();
-            int e=body.indexOf("\",\"done\"",s);
-            String answ=body.substring(s,e);
-            // System.out.println("Mars: "+answ.replace("\\n", "\n"));
-            String reply=answ.replace("\\n","\n").trim();
-            if(reply.startsWith("TOOL")){
-                String line=reply.substring(5).split("\n")[0];
-                String[] parts=line.split("\\|",2);
-                String name=parts[0].trim();
-                String arg=parts.length>1 ? parts[1].trim() : "";
-                System.out.println("Mars: "+Tools.run(name,arg));
-            }else{System.out.println("Mars: "+reply);}
-
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String body = response.body();
+            String key = "\"response\":\"";
+            int s = body.indexOf(key) + key.length();
+            int e = body.indexOf("\",\"done\"", s);
+            String answ = body.substring(s, e);
+            String reply = answ.replace("\\n", "\n").trim();
+            if (reply.startsWith("TOOL")) {
+                String line = reply.substring(reply.indexOf("TOOL") + 4).replaceFirst("^:", "").trim().split("\n")[0];
+                String[] parts = line.split("\\|", 2);
+                String name = parts[0].trim();
+                String arg = parts.length > 1 ? parts[1].trim() : "";
+                System.out.println("Mars: " + Tools.run(name, arg));
+            } else if (reply.contains(":") && isTool(reply.split(":", 2)[0].trim())) {
+                String[] parts = reply.split(":", 2);
+                System.out.println("Mars: " + Tools.run(parts[0].trim(), parts[1].trim()));
+            } else {
+                System.out.println("Mars: " + reply);
+            }
         }
-        
+    }
 
-} }
+    static boolean isTool(String s) {
+        return s.equals("open_app") || s.equals("close_app") || s.equals("open_url")
+            || s.equals("create_file") || s.equals("delete_file") || s.equals("read_file")
+            || s.equals("say") || s.equals("cmd");
+    }
+}
