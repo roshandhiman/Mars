@@ -24,7 +24,7 @@ public class Mars{
             // System.out.println("MARS: "+answer.replace("\\n","\n"));
             // System.out.println("Status: "+resp.statusCode());
             // System.out.println("Raw Resp: "+body);
-            String key="\"resp\":\"";
+            String key="\"response\":\"";
             int s=body.indexOf(key)+key.length();
             int e=body.indexOf("\",\"done\"",s);
             String answ=body.substring(s,e);
